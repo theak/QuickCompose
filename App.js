@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types'
 
-import { Dimensions, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Dimensions, Platform, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import AsyncStorage from '@react-native-community/async-storage';
+//import AsyncStorage from '@react-native-community/async-storage';
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -69,10 +69,9 @@ class Tab extends React.Component {
 export default class App extends React.Component {
   state = {
     index: 0,
-    notes: {0: []},
+    notes: {0: ""},
     routes: [
-      { key: 0, title: 'New note' },
-      { key: 1, title: 'Second' },
+      { key: 0, title: 'New note' }
     ],
   };
 
@@ -80,7 +79,14 @@ export default class App extends React.Component {
     return <Tab 
       index={scene.route.key}
       onChangeText={ (index, content) => {
-        this.state.notes[index] = content;
+        let notes = this.state.notes;
+        let routes = this.state.routes;
+        
+        notes[index] = content;
+        routes[index].title = displayTitle(content);
+        this.setState({notes: notes, routes: routes});
+
+        //Update local storage
       }}
       />;
   }
@@ -90,7 +96,15 @@ export default class App extends React.Component {
     //Bind handlers
     this.renderScene = this.renderScene.bind(this);
 
-    //Dynamically initialize routes
+    //Get notes from localstorage if it exists
+
+    //Dynamically generate titles and initialize routes
+    var routes = [];
+    for (var key in this.state.notes) {
+      var title = displayTitle(this.state.notes[key]);
+      routes.push({key: parseInt(key), title: title});
+    }
+    this.state.routes = routes;
   }
 
   render() {
@@ -108,7 +122,7 @@ export default class App extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: StatusBar.currentHeight
+    marginTop: ((Platform.OS === 'ios') ? 40 : StatusBar.currentHeight)
   },
   scene: {
     flex: 1,
@@ -124,5 +138,5 @@ const styles = StyleSheet.create({
 function displayTitle(text) {
   //TODO: Make this smarter
   if (text.length == 0) return "New note"
-  else return text.split('\n')[0].substr(0, 18);
+  else return text.split('\n')[0].substr(0, 15);
 }
