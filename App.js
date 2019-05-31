@@ -32,6 +32,7 @@ class Tab extends React.Component {
           onFocus={() => this.setState({placeholderText: ''})}
           onBlur={() => this.setState({placeholderText: placeholderText})}
           autoFocus={true}
+          value={this.props.text}
           onChangeText={(text) => this.props.onChangeText(this.props.routeKey, text)}
           />
 
@@ -69,11 +70,11 @@ export default class App extends React.Component {
         for (index = 0; index < routes.length; index++) {
           if (routes[index].key == key) break;
         }
-        notes[key] = content;
         routes[index].title = displayTitle(content);
-        this.setState({notes: notes, routes: routes});
-
-        //Update local storage
+        this.setState({
+          notes: {...notes, [key]: content},
+          routes: routes
+        });
       }}
       />;
   }
@@ -87,6 +88,7 @@ export default class App extends React.Component {
 
     //Get notes from localstorage if it exists, else set to default
     this.state = getDefaultState();
+
     //Dynamically generate titles and initialize routes
     var routes = [];
     for (var k in this.state.notes) {
@@ -96,6 +98,25 @@ export default class App extends React.Component {
       if (key > this.state.maxKey) this.state.maxKey = key;
     }
     this.state.routes = routes;
+  }
+
+  componentDidMount() {
+    AsyncStorage.getItem('appState', (errs,result) => {
+      if (!errs) {
+        if (result !== null) {
+          this.setState(JSON.parse(result));
+        }
+      }
+    })
+  }
+
+  componentDidUpdate() {
+    //Write current state to asyncstorage
+    try {
+      AsyncStorage.setItem('appState', JSON.stringify(this.state));
+    } catch (error) {
+      alert("error");
+    }
   }
 
   newNote(prevState) {
@@ -108,7 +129,6 @@ export default class App extends React.Component {
   }
 
   deleteCurrentNote(prevState) {
-    this.tabs[0].input.clear();
     let key = this.state.routes[this.state.index].key;
     if (this.state.routes.length <= 1) {
       return getDefaultState();
