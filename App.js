@@ -121,18 +121,21 @@ export default class App extends React.Component {
 
   newNote(prevState) {
     let newKey = prevState.maxKey + 1;
+    let blankNotes = Object.values(prevState.notes).filter((note) => note === '').length;
+    let title = 'New note' + (blankNotes ? (' (' + (blankNotes + 1) + ')') : '');
     return ({
       maxKey: newKey,
       notes: {...prevState.notes, [newKey]: ''},
-      routes: [{key: newKey, title: 'New note'}, ...prevState.routes]
+      routes: [{key: newKey, title: title}, ...prevState.routes],
+      index: 0
     });
   }
 
   deleteCurrentNote(prevState) {
-    let key = this.state.routes[this.state.index].key;
     if (this.state.routes.length <= 1) {
       return getDefaultState();
     }
+    let key = this.state.routes[this.state.index].key;
     return ({
       notes: {...prevState.notes, [key]: null},
       routes: prevState.routes.filter((_, i) => i !== this.state.index)
@@ -152,31 +155,20 @@ export default class App extends React.Component {
 
         <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
           <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-between', position: 'relative'}}>
-            <View style={{width: 60, height: 70}}>
-                <Icon.Button name="md-trash" onPress={() => this.setState(this.deleteCurrentNote)}
-                style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#AA3333'}]} />
-            </View>
-            <View style={{width: 60, height: 70, backgroundColor: '#666'}}>
-                {/*<Icon name="md-list-box" style={[styles.actionButtonIcon, styles.large]} />*/} 
-                <Text style={[styles.actionButtonIcon, styles.large]}>•</Text>
-            </View>
-            <View style={{width: 100, height: 70, backgroundColor: '#33AA33'}}>
-                <Icon name="ios-share" style={[styles.actionButtonIcon, styles.large]} />
-            </View>
+            <Icon.Button name="md-trash" onPress={() => this.setState(this.deleteCurrentNote)}
+              style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#AA3333'}]} />
+            <Icon.Button name="md-more"
+              style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#333', fontSize: 12}]} />
+            <Icon.Button name="md-mic" onPress={() => alert('Voice memo not implemented')}
+              style={styles.actionButtonIcon, styles.large} />
+            <Icon.Button name="md-camera" onPress={() => alert('Camera input not implemented')}
+              style={styles.actionButtonIcon, styles.large} />
+
+            <Icon.Button name="ios-share" style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#33AA33'}]} />
           </View>
         </View>
 
-        <ActionButton buttonColor="rgba(231,76,60,1)" style={{marginBottom: 60}} >
-          <ActionButton.Item buttonColor='#9b59b6' title="Text" onPress={() => this.setState(this.newNote)}>
-            <Icon name="md-create" style={styles.actionButtonIcon} />
-          </ActionButton.Item>
-          <ActionButton.Item buttonColor='#3498db' title="Voice" onPress={() => {}}>
-            <Icon name="md-mic" style={styles.actionButtonIcon} />
-          </ActionButton.Item>
-          <ActionButton.Item buttonColor='#1abc9c' title="Photos" onPress={() => {}}>
-            <Icon name="md-camera" style={styles.actionButtonIcon} />
-          </ActionButton.Item>
-        </ActionButton>
+        <ActionButton buttonColor="rgba(231,76,60,1)" style={{marginBottom: 60}} onPress={() => this.setState(this.newNote)}/>
       </View>
     );
   }
@@ -193,7 +185,7 @@ const styles = StyleSheet.create({
     fontSize: 20, height: 22, textAlign: 'center'
   },
   large: {
-    fontSize: 36, height: 50, padding: 10, color: 'white', paddingTop: 16, textAlign: 'center'
+    fontSize: 36, height: 60, padding: 20, color: 'white', paddingTop: 16, paddingLeft: 30, textAlign: 'center'
   }
 });
 
