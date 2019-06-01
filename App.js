@@ -176,7 +176,6 @@ export default class App extends React.Component {
 
             <Icon.Button name="ios-share" onPress={() => alert('Share not implemented')}
               style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#33AA33'}]} />
-            }
           </View>
         </View>
 
