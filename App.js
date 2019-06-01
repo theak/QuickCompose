@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types'
 
-import { AsyncStorage, Button, Dimensions, Platform, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AsyncStorage, Button, Dimensions, Keyboard, Platform, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { ConfirmDialog } from 'react-native-simple-dialogs';
 
@@ -49,6 +49,7 @@ getDefaultState = () => {
     notes: {0: ""},
     maxKey: 0,
     deleteDialog: false,
+    bottomOffset: 0,
     routes: [
       { key: 0, title: 'New note' }
     ],
@@ -101,6 +102,15 @@ export default class App extends React.Component {
       if (key > this.state.maxKey) this.state.maxKey = key;
     }
     this.state.routes = routes;
+  }
+
+  componentWillMount() {
+    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+      this.setState({bottomOffset: e.endCoordinates.height});
+    });
+    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', (e) => {
+      this.setState({bottomOffset: 0});
+    });
   }
 
   componentDidMount() {
@@ -169,14 +179,13 @@ export default class App extends React.Component {
 
         <ConfirmDialog
           title={'Delete "' + this.state.routes[this.state.index].title + '"?'}
-          //message={this.state.routes[this.state.index].title}
           visible={this.state.deleteDialog}
           onTouchOutside={() => this.setState({deleteDialog: false})}
           positiveButton={{title: "Delete", onPress: () => this.setState(this.deleteCurrentNote)}}
           negativeButton={{title: "Cancel", onPress: () => this.setState({deleteDialog: false}) }}
       />
 
-        <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
+        <View style={{position: 'absolute', bottom: 5 + this.state.bottomOffset, width: '100%'}}>
           <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-between', position: 'relative'}}>
             <Icon.Button name="md-trash" onPress={() => this.setState({deleteDialog: true})}
               style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#AA3333'}]} />
@@ -192,7 +201,7 @@ export default class App extends React.Component {
           </View>
         </View>
 
-        <ActionButton buttonColor="rgba(231,76,60,1)" style={{marginBottom: 60}} onPress={() => this.setState(this.newNote)}/>
+        <ActionButton buttonColor="rgba(231,76,60,1)" style={{marginBottom: 50 + this.state.bottomOffset, marginRight: -15}} onPress={() => this.setState(this.newNote)}/>
       </View>
     );
   }
@@ -209,7 +218,7 @@ const styles = StyleSheet.create({
     fontSize: 20, height: 22, textAlign: 'center'
   },
   large: {
-    fontSize: 36, height: 60, padding: 20, color: 'white', paddingTop: 16, paddingLeft: 30, textAlign: 'center'
+    fontSize: 36, height: 50, padding: 15, color: 'white', paddingLeft: 25
   }
 });
 
