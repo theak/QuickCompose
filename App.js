@@ -86,9 +86,8 @@ export default class App extends React.Component {
         }
 
         // Save state
-        // TODO: Don't edit this directly- make a copy
         let notes = this.state.notes;
-        let routes = this.state.routes;
+        let routes = [...this.state.routes];
         var index;
         for (index = 0; index < routes.length; index++) {
           if (routes[index].key == key) break;
