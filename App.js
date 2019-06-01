@@ -3,6 +3,8 @@ import PropTypes from 'prop-types'
 
 import { AsyncStorage, Button, Dimensions, Platform, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
+import { ConfirmDialog } from 'react-native-simple-dialogs';
+
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -46,6 +48,7 @@ getDefaultState = () => {
     index: 0,
     notes: {0: ""},
     maxKey: 0,
+    deleteDialog: false,
     routes: [
       { key: 0, title: 'New note' }
     ],
@@ -104,7 +107,7 @@ export default class App extends React.Component {
     AsyncStorage.getItem('appState', (errs,result) => {
       if (!errs) {
         if (result !== null) {
-          this.setState(JSON.parse(result));
+          this.setState({...JSON.parse(result), deleteDialog: false});
         }
       }
     })
@@ -137,8 +140,10 @@ export default class App extends React.Component {
     }
     let key = this.state.routes[this.state.index].key;
     return ({
-      notes: {...prevState.notes, [key]: null},
-      routes: prevState.routes.filter((_, i) => i !== this.state.index)
+      deleteDialog: false,
+      notes: {...this.state.notes, [key]: null},
+      routes: this.state.routes.filter((_, i) => i !== this.state.index),
+      index: 0
     })
   }
 
@@ -146,7 +151,6 @@ export default class App extends React.Component {
     let key = this.state.routes[this.state.index].key;
     let lines = prevState.notes[key].split('\n');
     let needsNewline = lines[lines.length - 1].trim() !== '';
-    alert(needsNewline);
     return ({
       notes: {...prevState.notes, [key]: (prevState.notes[key] + '• ')}
     });
@@ -163,9 +167,18 @@ export default class App extends React.Component {
           style={styles.container}
         />
 
+        <ConfirmDialog
+          title={'Delete "' + this.state.routes[this.state.index].title + '"?'}
+          //message={this.state.routes[this.state.index].title}
+          visible={this.state.deleteDialog}
+          onTouchOutside={() => this.setState({deleteDialog: false})}
+          positiveButton={{title: "Delete", onPress: () => this.setState(this.deleteCurrentNote)}}
+          negativeButton={{title: "Cancel", onPress: () => this.setState({deleteDialog: false}) }}
+      />
+
         <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
           <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-between', position: 'relative'}}>
-            <Icon.Button name="md-trash" onPress={() => this.setState(this.deleteCurrentNote)}
+            <Icon.Button name="md-trash" onPress={() => this.setState({deleteDialog: true})}
               style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#AA3333'}]} />
             <Icon.Button name="md-more" onPress={() => this.setState(this.addBulletToCurrentNote)}
               style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#333', fontSize: 12}]} />
