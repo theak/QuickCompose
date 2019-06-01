@@ -142,6 +142,16 @@ export default class App extends React.Component {
     })
   }
 
+  addBulletToCurrentNote(prevState) {
+    let key = this.state.routes[this.state.index].key;
+    let lines = prevState.notes[key].split('\n');
+    let needsNewline = lines[lines.length - 1].trim() !== '';
+    alert(needsNewline);
+    return ({
+      notes: {...prevState.notes, [key]: (prevState.notes[key] + '• ')}
+    });
+  }
+
   render() {
     return (
       <View style={{flex: 1}}>
@@ -157,14 +167,16 @@ export default class App extends React.Component {
           <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-between', position: 'relative'}}>
             <Icon.Button name="md-trash" onPress={() => this.setState(this.deleteCurrentNote)}
               style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#AA3333'}]} />
-            <Icon.Button name="md-more"
+            <Icon.Button name="md-more" onPress={() => this.setState(this.addBulletToCurrentNote)}
               style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#333', fontSize: 12}]} />
             <Icon.Button name="md-mic" onPress={() => alert('Voice memo not implemented')}
               style={styles.actionButtonIcon, styles.large} />
             <Icon.Button name="md-camera" onPress={() => alert('Camera input not implemented')}
               style={styles.actionButtonIcon, styles.large} />
 
-            <Icon.Button name="ios-share" style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#33AA33'}]} />
+            <Icon.Button name="ios-share" onPress={() => alert('Share not implemented')}
+              style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#33AA33'}]} />
+            }
           </View>
         </View>
 
