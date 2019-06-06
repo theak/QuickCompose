@@ -25,7 +25,8 @@ class Tab extends React.Component {
 
   render() {
     let lines = this.props.text.split('\n');
-    let capitalize = lines.length > 0 && lines[lines.length - 1].startsWith('• ') && lines[lines.length - 1].length < 3;
+    //TODO: Add additional check that cursor must be at end of line
+    capitalize = lines.length > 0 && lines[lines.length - 1].startsWith('• ') && lines[lines.length - 1].length < 3;
 
     backgroundColor = ((this.props.routeKey % 2) == 0) ? '#555' : '#444';
     return (
@@ -75,13 +76,28 @@ export default class App extends React.Component {
       ref={(tab) => this.tabs[key] = tab}
       bottomOffset={this.state.bottomOffset}
       onChangeText={ (key, content) => {
-        // If last char was newline and previous line starts with bullet, continue the list
-        if (content[content.length - 1] === '\n' && (content.length > this.state.notes[key].length)) {
-          let lines = content.split('\n');
-          if (lines.length > 1 && (lines[lines.length - 2][0] === '•')) {
-            if (lines[lines.length - 2].length > 2) this.setState(this.addBulletToCurrentNote);
-            else if (lines[lines.length - 2].length === 2) this.setState(this.clearLastLine);
-            return;
+        let lastChar = content[content.length - 1];
+        let wasCharAdded = content.length == (this.state.notes[key].length + 1);
+
+        if (wasCharAdded) {
+          // If last char was newline and previous line starts with bullet, continue the list
+          if (lastChar === '\n') {
+            let lines = content.split('\n');
+            if (lines.length > 1 && (lines[lines.length - 2][0] === '•')) {
+              if (lines[lines.length - 2].length > 2) this.setState(this.addBulletToCurrentNote);
+              else if (lines[lines.length - 2].length === 2) this.setState(this.clearLastLine);
+              return;
+            }
+          }
+
+          // If last char was - and is first char on newline, replace with bullet
+          if (lastChar === '-') {
+            let lines = content.split('\n');
+            if (lines.length > 1 && lines[lines.length - 1][0] === lastChar) {
+              this.setState(this.clearLastLine, () =>
+                this.setState(this.addBulletToCurrentNote));
+              return;
+            }
           }
         }
 
