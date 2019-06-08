@@ -8,9 +8,8 @@ import { ConfirmDialog } from 'react-native-simple-dialogs';
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-
-
-const placeholderText = "Tap to edit...";
+const placeholderText = 'Tap to edit...';
+const bullet = '•';
 
 class Tab extends React.Component {
   state = {
@@ -18,21 +17,34 @@ class Tab extends React.Component {
   }
   static propTypes = {
     routeKey: PropTypes.number.isRequired,
-    onChangeText: PropTypes.func.isRequired,
     text: PropTypes.string.isRequired,
-    bottomOffset: PropTypes.number.isRequired
+    bottomOffset: PropTypes.number.isRequired,
+    onChangeText: PropTypes.func.isRequired,
+    onSelectionChange: PropTypes.func.isRequired
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.onChangeText = this.onChangeText.bind(this);
+    this.onSelectionChange = this.onSelectionChange.bind(this);
+  }
+
+  onChangeText(text) {
+    this.props.onChangeText(this.props.routeKey, text);
+  }
+
+  onSelectionChange(event) {
+    let selection = event.nativeEvent.selection;
+    this.props.onSelectionChange(selection);
   }
 
   render() {
-    let lines = this.props.text.split('\n');
-    //TODO: Add additional check that cursor must be at end of line
-    capitalize = lines.length > 0 && lines[lines.length - 1].startsWith('• ') && lines[lines.length - 1].length < 3;
-
-    backgroundColor = ((this.props.routeKey % 2) == 0) ? '#555' : '#444';
+    let backgroundColor = ((this.props.routeKey % 2) == 0) ? '#555' : '#444';
     return (
       <View style={[styles.scene, {backgroundColor: backgroundColor}]}>
         <TextInput 
-          style={{color: '#FAFAFA', fontSize: 22, textAlignVertical: 'top', padding: 10,
+          style={{color: '#FAFAFA', fontSize: 18, textAlignVertical: 'top', padding: 10,
             height: (Dimensions.get('window').height - 150 - this.props.bottomOffset)}}
           multiline={true}
           autoCorrect={true}
@@ -41,9 +53,9 @@ class Tab extends React.Component {
           onFocus={() => this.setState({placeholderText: ''})}
           onBlur={() => this.setState({placeholderText: placeholderText})}
           autoFocus={true}
-          autoCapitalize={capitalize ? 'words' : 'sentences'}
           value={this.props.text}
-          onChangeText={(text) => this.props.onChangeText(this.props.routeKey, text)}
+          onChangeText={this.onChangeText}
+          onSelectionChange={this.onSelectionChange}
           />
 
       </View>
@@ -75,45 +87,10 @@ export default class App extends React.Component {
       text={this.state.notes[key]}
       ref={(tab) => this.tabs[key] = tab}
       bottomOffset={this.state.bottomOffset}
-      onChangeText={ (key, content) => {
-        let lastChar = content[content.length - 1];
-        let wasCharAdded = content.length == (this.state.notes[key].length + 1);
-
-        if (wasCharAdded) {
-          // If last char was newline and previous line starts with bullet, continue the list
-          if (lastChar === '\n') {
-            let lines = content.split('\n');
-            if (lines.length > 1 && (lines[lines.length - 2][0] === '•')) {
-              if (lines[lines.length - 2].length > 2) this.setState(this.addBulletToCurrentNote);
-              else if (lines[lines.length - 2].length === 2) this.setState(this.clearLastLine);
-              return;
-            }
-          }
-
-          // If last char was - and is first char on newline, replace with bullet
-          if (lastChar === '-') {
-            let lines = content.split('\n');
-            if (lines.length > 1 && lines[lines.length - 1][0] === lastChar) {
-              this.setState(this.clearLastLine, () =>
-                this.setState(this.addBulletToCurrentNote));
-              return;
-            }
-          }
-        }
-
-        // Save state
-        let notes = this.state.notes;
-        let routes = [...this.state.routes];
-        var index;
-        for (index = 0; index < routes.length; index++) {
-          if (routes[index].key == key) break;
-        }
-        routes[index].title = displayTitle(content);
-        this.setState({
-          notes: {...notes, [key]: content},
-          routes: routes,
-        });
+      onSelectionChange={(selection) => {
+        this.selection = selection;
       }}
+      onChangeText={this.handleChangeText}
       />;
   }
 
@@ -123,6 +100,7 @@ export default class App extends React.Component {
     this.renderScene = this.renderScene.bind(this);
     this.newNote = this.newNote.bind(this);
     this.deleteCurrentNote = this.deleteCurrentNote.bind(this);
+    this.handleChangeText = this.handleChangeText.bind(this);
 
     //Get notes from localstorage if it exists, else set to default
     this.state = getDefaultState();
@@ -136,6 +114,49 @@ export default class App extends React.Component {
       if (key > this.state.maxKey) this.state.maxKey = key;
     }
     this.state.routes = routes;
+  }
+
+  handleChangeText(key, content) {
+
+    let wasCharAdded = content.length >= (this.state.notes[key].length + 1);
+    let lastChar = content[content.length - 1];
+
+    if (wasCharAdded) {
+      // If last char was newline and previous line starts with bullet, continue the list
+      if (lastChar === '\n'
+          && this.selection && (this.selection.start === this.selection.end)
+          && this.selection.end === (content.length - 1)) {
+        let lines = content.split('\n');
+        if (lines.length > 1 && (lines[lines.length - 2][0] === '•')) {
+          if (lines[lines.length - 2].length > 2) this.setState(this.addBulletToCurrentNote);
+          else if (lines[lines.length - 2].length === 2) this.setState(this.clearLastLine);
+          return;
+        }
+      }
+      // If last char was - and is first char on newline, replace with bullet
+      if (lastChar === '-') {
+        let lines = content.split('\n');
+        if (lines.length > 1 && lines[lines.length - 1][0] === lastChar) {
+          this.setState(this.clearLastLine, () =>
+            this.setState(this.addBulletToCurrentNote));
+          return;
+        }
+      }
+
+    }
+    // Save state
+    let notes = this.state.notes;
+    let routes = [...this.state.routes];
+    var index;
+    for (index = 0; index < routes.length; index++) {
+      if (routes[index].key == key) break;
+    }
+    routes[index].title = displayTitle(content);
+    this.setState({
+      notes: {...notes, [key]: content},
+      routes: routes
+    });
+
   }
 
   componentWillMount() {
@@ -222,13 +243,21 @@ export default class App extends React.Component {
   }
 
   addBulletToCurrentNote(prevState) {
+    //Add bullet to text up until selection, then append text post selection
+
     let key = this.state.routes[this.state.index].key;
-    let lines = prevState.notes[key].split('\n');
+    let prevNote = prevState.notes[key];
+    let beforeText = prevNote.substr(0, this.selection.start)
+    let afterText =  prevNote.substr(this.selection.end, prevNote.length);
+
+    let lines = beforeText.split('\n');
     let needsNewline = lines[lines.length - 1].trim() !== '';
+    if (afterText) setTimeout(() => this.tabs[key].input.setNativeProps({selection: {start: beforeText.length + 2, end: beforeText.length + 2}}), 50);
     return ({
-      notes: {...prevState.notes, [key]: (prevState.notes[key]
+      notes: {...prevState.notes, [key]: (beforeText
         + (needsNewline ? '\n' : '')
-        + '• ')}
+        + '• '
+        + afterText)}
     });
   }
 
