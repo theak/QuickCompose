@@ -88,6 +88,9 @@ export default class App extends React.Component {
       ref={(tab) => this.tabs[key] = tab}
       bottomOffset={this.state.bottomOffset}
       onSelectionChange={(selection) => {
+        if (this.state.capitalize && (selection.start < this.selection.start)) {
+          this.setState({capitalize: false});
+        }
         this.selection = selection;
       }}
       onChangeText={this.handleChangeText}
