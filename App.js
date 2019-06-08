@@ -88,7 +88,7 @@ export default class App extends React.Component {
       ref={(tab) => this.tabs[key] = tab}
       bottomOffset={this.state.bottomOffset}
       onSelectionChange={(selection) => {
-        if (this.state.capitalize && (selection.start < this.selection.start)) {
+        if (this.state.capitalize && this.selection && (selection.start < this.selection.start)) {
           this.setState({capitalize: false});
         }
         this.selection = selection;
@@ -123,9 +123,9 @@ export default class App extends React.Component {
   handleChangeText(key, content) {
 
     let wasCharAdded = content.length >= (this.state.notes[key].length + 1);
-    let lastChar = content[content.length - 1];
 
     if (wasCharAdded) {
+      let lastChar = content[this.selection ? (this.selection.start) : (content.length - 1)];
       // If last char was newline and previous line starts with bullet, continue the list
       if (lastChar === '\n'
           && this.selection && (this.selection.start === this.selection.end)
@@ -146,8 +146,8 @@ export default class App extends React.Component {
           return;
         }
       }
-
-      if (this.state.capitalize && lastChar === ' ' && content[content.length - 2] !== bullet) {
+      let currentPos = this.selection ? this.selection.end : (content.length - 1);
+      if (this.state.capitalize && lastChar === ' ') {
         this.setState({capitalize: false});
       }
 
