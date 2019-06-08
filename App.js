@@ -56,8 +56,8 @@ class Tab extends React.Component {
           value={this.props.text}
           onChangeText={this.onChangeText}
           onSelectionChange={this.onSelectionChange}
+          autoCapitalize={this.props.capitalize ? 'words' : 'sentences'}
           />
-
       </View>
     )
   }
@@ -91,6 +91,7 @@ export default class App extends React.Component {
         this.selection = selection;
       }}
       onChangeText={this.handleChangeText}
+      capitalize={this.state.capitalize}
       />;
   }
 
@@ -127,7 +128,7 @@ export default class App extends React.Component {
           && this.selection && (this.selection.start === this.selection.end)
           && this.selection.end === (content.length - 1)) {
         let lines = content.split('\n');
-        if (lines.length > 1 && (lines[lines.length - 2][0] === '•')) {
+        if (lines.length > 1 && (lines[lines.length - 2][0] === bullet)) {
           if (lines[lines.length - 2].length > 2) this.setState(this.addBulletToCurrentNote);
           else if (lines[lines.length - 2].length === 2) this.setState(this.clearLastLine);
           return;
@@ -141,6 +142,10 @@ export default class App extends React.Component {
             this.setState(this.addBulletToCurrentNote));
           return;
         }
+      }
+
+      if (this.state.capitalize && lastChar === ' ' && content[content.length - 2] !== bullet) {
+        this.setState({capitalize: false});
       }
 
     }
@@ -254,6 +259,7 @@ export default class App extends React.Component {
     let needsNewline = lines[lines.length - 1].trim() !== '';
     if (afterText) setTimeout(() => this.tabs[key].input.setNativeProps({selection: {start: beforeText.length + 2, end: beforeText.length + 2}}), 50);
     return ({
+      capitalize: true,
       notes: {...prevState.notes, [key]: (beforeText
         + (needsNewline ? '\n' : '')
         + '• '
