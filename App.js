@@ -296,7 +296,8 @@ export default class App extends React.Component {
               style={styles.actionButtonIcon, styles.large} />
             <Icon.Button name="md-camera" onPress={() => alert('Camera input not implemented')}
               style={styles.actionButtonIcon, styles.large} />
-
+            <Icon.Button name="md-brush" onPress={() => alert('Drawing not implemented')}
+              style={styles.actionButtonIcon, styles.large} />
             <Icon.Button name="ios-share" onPress={() => this.share()}
               style={[styles.actionButtonIcon, styles.large, {backgroundColor: '#33AA33'}]} />
           </View>
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     fontSize: 20, height: 22, textAlign: 'center'
   },
   large: {
-    fontSize: 36, height: 50, padding: 15, color: 'white', paddingLeft: 25
+    fontSize: 36, height: 50, padding: 10, color: 'white', paddingLeft: 20
   }
 });
 
